@@ -6,9 +6,12 @@ from __future__ import annotations
 
 from typing import Any
 
+from re import sub, compile
 
 from .constants import FOREIGN_ATTRIBUTE_ADJUSTMENTS, INLINE_ELEMENTS, VOID_ELEMENTS
 
+
+_whitespace_re = compile(r'\s+')
 
 
 def _escape_text(text: str | None) -> str:
