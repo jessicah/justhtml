@@ -6,7 +6,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from .constants import FOREIGN_ATTRIBUTE_ADJUSTMENTS, VOID_ELEMENTS
+
+from .constants import FOREIGN_ATTRIBUTE_ADJUSTMENTS, INLINE_ELEMENTS, VOID_ELEMENTS
+
 
 
 def _escape_text(text: str | None) -> str:
@@ -88,6 +90,14 @@ def to_html(node: Any, indent: int = 0, indent_size: int = 2, *, pretty: bool = 
 
 _PREFORMATTED_ELEMENTS: set[str] = {"pre", "textarea"}
 
+def _should_pretty_indent_children(children: list[Any]) -> bool:
+    has_inline_children = True
+
+    for child in children:
+        if child.name not in INLINE_ELEMENTS:
+            has_inline_children = False
+
+    return not has_inline_children
 
 def _node_to_html(node: Any, indent: int = 0, indent_size: int = 2, pretty: bool = True, *, in_pre: bool) -> str:
     """Helper to convert a node to HTML."""
@@ -151,6 +161,22 @@ def _node_to_html(node: Any, indent: int = 0, indent_size: int = 2, pretty: bool
             if child is not None
         )
         return f"{prefix}{open_tag}{inner}{serialize_end_tag(name)}"
+
+    if pretty and not _should_pretty_indent_children(children):
+        parts = []
+        for child in children:
+            if child is not None:
+                child_html = _node_to_html(child, indent+1, indent_size, pretty=False, in_pre=content_pre)
+                if child_html:
+                    if child_html == "":
+                        continue
+                    elif child_html.strip() == "":
+                        parts.append(" ")
+                    else:
+                        parts.append(_whitespace_re.sub(' ', child_html))
+        inner = "".join(parts)
+        inner_prefix = " " * (indent * (indent_size + 1)) if pretty and not in_pre else ""
+        return f"{prefix}{open_tag}{newline}{inner_prefix}{inner}{newline}{prefix}{serialize_end_tag(name)}"
 
     # Render with child indentation
     parts = [f"{prefix}{open_tag}"]

@@ -201,6 +201,15 @@ FORMATTING_ELEMENTS = {
     "u",
 }
 
+INLINE_ELEMENTS = {
+	"#text",
+	"span",
+	"a",
+	"code",
+	"em",
+	"strong"
+}
+
 SPECIAL_ELEMENTS = {
     "address",
     "applet",
